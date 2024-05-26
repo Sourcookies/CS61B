@@ -114,10 +114,13 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
         board.setViewingPerspective(side);
+        //列优先,从左上方开始col:0到3,row从上到下,3递减到0.
         for (int col = 0; col < board.size(); col++) {
             for (int row = board.size() - 1;row >= 0;row--){
                 Tile tile = board.tile(col, row);
+
                 int nextRow = nextNonNullTileRow(col, row);
+                //说明nextRow全为null,即这列跳过.
                 if (nextRow == -1){
                     break;
                 }
