@@ -113,14 +113,40 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
-
+        board.setViewingPerspective(side);
+        for (int col = 0; col < board.size(); col++) {
+            for (int row = board.size() - 1;row >= 0;row--){
+                Tile tile = board.tile(col, row);
+                int nextRow = nextNonNullTileRow(col, row);
+                if (nextRow == -1){
+                    break;
+                }
+                Tile nextTile = board.tile(col, nextRow);
+                if (tile == null || nextTile.value() == tile.value()){
+                    changed = true;
+                    if (board.move(col, row, nextTile)) {
+                        score += 2 * nextTile.value();
+                    } else {
+                        row++;
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);
         checkGameOver();
         if (changed) {
             setChanged();
         }
         return changed;
     }
-
+    private int nextNonNullTileRow(int col, int row) {
+        for (int pos = row - 1; pos >= 0; pos--){
+            if (board.tile(col, pos) != null){
+                return pos;
+            }
+        }
+        return -1;
+    }
     /** Checks if the game is over and sets the gameOver variable
      *  appropriately.
      */
@@ -138,8 +164,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
-        return false;
-    }
+            for (Tile tile: b) {
+                if (tile == null) {
+                    return true;
+                }
+            }
+            return false;
+        }
 
     /**
      * Returns true if any tile is equal to the maximum valid value.
@@ -148,6 +179,15 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        // empty的地方用null存储,null.value()会错,所以需要跳过.
+        for (Tile tile: b) {
+            if (tile == null){
+                continue;
+            }
+            if (tile.value() == MAX_PIECE){
+                return true;
+            }
+        }
         return false;
     }
 
@@ -159,9 +199,58 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+       for (int row = 0;row < b.size();row++){
+           for (int col = 0;col < b.size();col++){
+               //1.at least one empty space.
+               if (b.tile(col, row) == null){
+                   return true;
+               }
+               //2.two adjacent tiles have the same value.
+               //下面两个方法都是checkTileMoveExists的衍生方法.
+               if (checkTileMoveExists(b, col, row)){
+                   return true;
+               }
+           }
+       }
         return false;
     }
-
+    //上下左右是否相等,相等就能合并,对应题干的条件2
+    public static boolean checkTileMoveExists(Board b, int col, int row){
+        Tile tile = b.tile(col, row);
+        if (checkTileValid(b, col + 1, row)) {
+            if (tile.value() == b.tile(col + 1, row).value()) {
+                return true;
+            }
+        }
+        if (checkTileValid(b, col, row + 1)) {
+            if (tile.value() == b.tile(col, row + 1).value()) {
+                return true;
+            }
+        }
+        if (checkTileValid(b, col - 1, row)) {
+            if (tile.value() == b.tile(col - 1, row).value()) {
+                return true;
+            }
+        }
+        if (checkTileValid(b, col, row - 1)) {
+            if (tile.value() == b.tile(col, row - 1).value()) {
+                return true;
+            }
+        }
+        return false;
+    }
+    public static boolean checkTileValid(Board b, int col, int row){
+        // check bound is valid.
+        if (col < 0 || col > b.size() - 1 || row < 0 || row > b.size() - 1){
+            return false;
+        }
+        //check is null or not
+        //不过在上面的atLeastOneMoveExists()中,已经将这种情况排除了,可以省略.
+        if (b.tile(col, row) == null){
+            return false;
+        }
+        return true;
+    }
 
     @Override
      /** Returns the model as a string, used for debugging. */
