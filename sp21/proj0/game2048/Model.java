@@ -114,7 +114,7 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
         board.setViewingPerspective(side);
-        //列优先,从左上方开始col:0到3,row从上到下,3递减到0.
+        //列优先,从左到右开始col:0到3,row从上到下,3递减到0.
         for (int col = 0; col < board.size(); col++) {
             for (int row = board.size() - 1;row >= 0;row--){
                 Tile tile = board.tile(col, row);
@@ -127,9 +127,14 @@ public class Model extends Observable {
                 Tile nextTile = board.tile(col, nextRow);
                 if (tile == null || nextTile.value() == tile.value()){
                     changed = true;
+                    //board.move():如果Tile为null,nextTile为2,它会交换两者位置,并return false.
+                    //如果都为2,两者相加后,放在tile,newTile置为null,并return true.
                     if (board.move(col, row, nextTile)) {
                         score += 2 * nextTile.value();
                     } else {
+                        //没有move(里面有merge方法)即合并过,row++,上面循环会row--,即不变：
+                        //合并次数:0/1.
+                        //交换位置,但没有使用过move(合并方法),让row不改变,向下继续寻找可以合并的数.
                         row++;
                     }
                 }
